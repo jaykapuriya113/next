@@ -19,14 +19,7 @@ interface Movie {
 interface GetMoviesData {
   movies: Movie[];
 }
-interface MovieInput {
-  title: string;
-  minutes: number;
-}
-interface MovieUpdateInput {
-  title?: string;
-  minutes?: number;
-}
+
 const client = new ApolloClient({
   uri: "http://localhost:4000/graphql",
   cache: new InMemoryCache(),
@@ -43,13 +36,13 @@ const CREATE_MOVIE_MUTATION = gql`
 `;
 
 const UPDATE_MOVIE_MUTATION = gql`
-  mutation UpdateMovie($id: Int!, $input: MovieUpdateInput!) {
+  mutation UpdateMovie($id: Float!, $input: MovieUpdateInput!) {
     updateMovie(id: $id, input: $input)
   }
 `;
 
 const DELETE_MOVIE_MUTATION = gql`
-  mutation DeleteMovie($id: Int!) {
+  mutation DeleteMovie($id: Float!) {
     deleteMovie(id: $id)
   }
 `;
@@ -65,16 +58,19 @@ const GET_MOVIES_QUERY = gql`
 `;
 
 const Home = (): JSX.Element => {
-  const [title, setTitle] = useState<string>("");
-  const [minutes, setMinutes] = useState<number>(0);
-  const [updateModalVisible, setUpdateModalVisible] = useState<boolean>(false);
-  const [updatedTitle, setUpdatedTitle] = useState<string>("");
-  const [updatedMinutes, setUpdatedMinutes] = useState<number>(0);
-  const [selectedMovieId, setSelectedMovieId] = useState<number>(0);
+  const [title, setTitle] = useState("");
+  const [minutes, setMinutes] = useState(0);
+  const [updateModalVisible, setUpdateModalVisible] = useState(false);
+  const [updatedTitle, setUpdatedTitle] = useState("");
+  const [updatedMinutes, setUpdatedMinutes] = useState(0);
+  const [selectedMovieId, setSelectedMovieId] = useState(0);
 
-  const { loading, error, data } = useQuery<GetMoviesData>(GET_MOVIES_QUERY, {
-    client,
-  });
+  const { loading, error, data, refetch } = useQuery<GetMoviesData>(
+    GET_MOVIES_QUERY,
+    {
+      client,
+    }
+  );
 
   const [createMovie] = useMutation(CREATE_MOVIE_MUTATION, {
     client,
@@ -88,7 +84,9 @@ const Home = (): JSX.Element => {
   const [updateMovie] = useMutation(UPDATE_MOVIE_MUTATION, { client });
   const [deleteMovie] = useMutation(DELETE_MOVIE_MUTATION, {
     client,
-    refetchQueries: [{ query: GET_MOVIES_QUERY }],
+    onCompleted: () => {
+      refetch();
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -138,9 +136,15 @@ const Home = (): JSX.Element => {
   const handleDelete = (id: number) => {
     deleteMovie({
       variables: {
-        id,
+        id: id,
       },
-    });
+    })
+      .then(() => {
+        console.log("Movie deleted successfully");
+      })
+      .catch((error) => {
+        console.error("Failed to delete movie", error);
+      });
   };
 
   if (loading) return <p>Loading...</p>;
@@ -149,30 +153,32 @@ const Home = (): JSX.Element => {
   return (
     <ApolloProvider client={client}>
       <main className="flex min-h-screen flex-col items-center justify-between p-24">
-        <form onSubmit={handleSubmit} className="flex flex-col">
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Movie Title"
-            style={{ fontSize: "18px", padding: "10px" }}
-            required
-          />
-          <input
-            type="number"
-            value={minutes}
-            onChange={(e) => setMinutes(parseInt(e.target.value))}
-            placeholder="Movie Duration (minutes)"
-            style={{ fontSize: "18px", padding: "10px" }}
-            required
-          />
-          <button
-            style={{ fontSize: "18px", padding: "10px 20px" }}
-            type="submit"
-          >
-            Create Movie
-          </button>
-        </form>
+        <Card>
+          <form onSubmit={handleSubmit} className="flex flex-col">
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Movie Title"
+              style={{ fontSize: "18px", padding: "10px" }}
+              required
+            />
+            <input
+              type="number"
+              value={minutes}
+              onChange={(e) => setMinutes(parseInt(e.target.value))}
+              placeholder="Movie Duration (minutes)"
+              style={{ fontSize: "18px", padding: "10px" }}
+              required
+            />
+            <button
+              style={{ fontSize: "18px", padding: "10px 20px" }}
+              type="submit"
+            >
+              Create Movie
+            </button>
+          </form>
+        </Card>
         {updateModalVisible && (
           <Card sx={{ backgroundColor: "grey" }}>
             <div className="modal">
@@ -219,28 +225,31 @@ const Home = (): JSX.Element => {
             </div>
           </Card>
         )}
-        <div>
-          {data?.movies.map((movie) => (
-            <div key={movie.id}>
-              <h2 style={{ fontSize: "30px" }}>{movie.title}</h2>
-              <p style={{ fontSize: "30px" }}>{movie.minutes} minutes</p>
-              <button
-                style={{ fontSize: "18px", padding: "10px 20px" }}
-                onClick={() =>
-                  handleUpdateModalOpen(movie.id, movie.title, movie.minutes)
-                }
-              >
-                Update
-              </button>
-              <button
-                style={{ fontSize: "18px", padding: "10px 20px" }}
-                onClick={() => handleDelete(movie.id)}
-              >
-                Delete
-              </button>
-            </div>
-          ))}
-        </div>
+        <Card sx={{ bgcolor: "lightgrey" }}>
+          <div>
+            {data?.movies.map((movie) => (
+              <div key={movie.id}>
+                <p>ID: {movie.id}</p>
+                <h2 style={{ fontSize: "30px" }}>{movie.title}</h2>
+                <p style={{ fontSize: "30px" }}>{movie.minutes} minutes</p>
+                <button
+                  style={{ fontSize: "18px", padding: "10px 20px" }}
+                  onClick={() =>
+                    handleUpdateModalOpen(movie.id, movie.title, movie.minutes)
+                  }
+                >
+                  Update
+                </button>
+                <button
+                  style={{ fontSize: "18px", padding: "10px 20px" }}
+                  onClick={() => handleDelete(movie.id)}
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+          </div>
+        </Card>
       </main>
     </ApolloProvider>
   );

@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const Home = () => {
-  const [searchText, setSearchText] = useState("");
+  const [id, setId] = useState("");
   const router = useRouter();
 
   const handleSearch = () => {
-    if (searchText) {
-      const route = `/testt/${searchText}`;
+    if (id) {
+      const route = `/blog/${id}`;
       router.push(route);
     }
   };
@@ -19,12 +19,46 @@ const Home = () => {
     <div>
       <TextField
         label="Search"
-        value={searchText}
-        onChange={(e) => setSearchText(e.target.value)}
+        value={id}
+        onChange={(e) => setId(e.target.value)}
       />
-      <Button onClick={handleSearch}>Search</Button>
+      <Button
+        style={{ backgroundColor: "lightgrey", marginLeft: "20px" }}
+        onClick={handleSearch}
+      >
+        Search
+      </Button>
+      <br></br>
+      <br></br>
+      <br></br>
       <Link href="/page">
-        <Button>Go to CURD Page</Button>
+        <Button style={{ backgroundColor: "lightgrey" }}>
+          <span>Go to CURD Page</span>
+        </Button>
+      </Link>
+      <br></br>
+      <br></br>
+      <br></br>
+      <Link href="/page/page1">
+        <Button style={{ backgroundColor: "lightgrey" }}>
+          <span>Go to Page1</span>
+        </Button>
+      </Link>
+      <br></br>
+      <br></br>
+      <br></br>
+      <Link href="/page/page2">
+        <Button style={{ backgroundColor: "lightgrey" }}>
+          <span>Go to Page2</span>
+        </Button>
+      </Link>
+      <br></br>
+      <br></br>
+      <br></br>
+      <Link href="/page/page3">
+        <Button style={{ backgroundColor: "lightgrey" }}>
+          <span>Go to Page3</span>
+        </Button>
       </Link>
     </div>
   );

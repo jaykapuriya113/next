@@ -1,0 +1,14 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "sqlite"
+  url      = "file:./database.sqlite"
+}
+
+model Movie {
+  id      Int      @id @default(autoincrement())
+  title   String
+  minutes Int
+}
+generator client {
+  provider = "prisma-client-js"
+}
