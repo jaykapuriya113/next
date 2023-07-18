@@ -1,48 +1,40 @@
-// import "reflect-metadata";
-// import { createConnection, getConnectionOptions } from "typeorm";
-// import express from "express";
-// import { ApolloServer } from "apollo-server-express";
-// import { buildSchema } from "type-graphql";
-// import { HelloWorldResolver } from "./resolvers/HelloWorldResolver";
-// import { MovieResolver } from "./resolvers/MovieResolver";
+import { ApolloServer, gql } from 'apollo-server-express';
+import express from 'express';
+import { PrismaClient } from '@prisma/client';
+import resolvers from './resolvers/AnimalResolver';
+const prisma = new PrismaClient();
 
-// (async () => {
-//   const app = express();
+const typeDefs = gql`
+  type Animal {
+    id: Int
+    name: String
+    height: Int
+    width: Int
+  }
 
-//   const options = await getConnectionOptions(
-//     process.env.NODE_ENV || "development"
-//   );
-//   await createConnection({ ...options, name: "default" });
+  type Mutation {
+    createAnimal(name: String, height: Int, width: Int): Animal
+    updateAnimal(id: Int, name: String, height: Int, width: Int): Animal
+    deleteAnimal(id: Int): Animal
+  }
+  type Query {
+    animals: [Animal]
+    animalsByHeight(height: Int!): [Animal]
+  }
+  
+`;
 
-//   const apolloServer = new ApolloServer({
-//     schema: await buildSchema({
-//       resolvers: [HelloWorldResolver, MovieResolver],
-//       validate: false
-//     }),
-//     context: ({ req, res }) => ({ req, res })
-//   });
-
-//   apolloServer.applyMiddleware({ app, cors: true });
-//   const port = process.env.PORT || 4000;
-//   app.listen(port, () => {
-//     console.log(`server started at http://localhost:${port}/graphql`);
-//   });
-// })();
-import "reflect-metadata";
-import { ApolloServer } from "apollo-server-express";
-import { buildSchema } from "type-graphql";
-import express from "express";
-import { MovieResolver } from "./resolvers/MovieResolver";
 
 async function startServer() {
   const app = express();
 
-  const schema = await buildSchema({
-    resolvers: [MovieResolver],
-    validate: false
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    context: { prisma },
   });
 
-  const server = new ApolloServer({ schema });
+  await server.start();
 
   server.applyMiddleware({ app });
 
@@ -52,4 +44,6 @@ async function startServer() {
   });
 }
 
-startServer();
+startServer().catch((error) => {
+  console.error('Error starting the server:', error);
+});

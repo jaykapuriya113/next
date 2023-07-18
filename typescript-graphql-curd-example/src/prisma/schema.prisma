@@ -1,14 +1,15 @@
-// prisma/schema.prisma
 datasource db {
   provider = "sqlite"
   url      = "file:./database.sqlite"
 }
 
-model Movie {
-  id      Int      @id @default(autoincrement())
-  title   String
-  minutes Int
+model Animal {
+  id     Int     @id @default(autoincrement())
+  name   String
+  height Int
+  width  Int
 }
+
 generator client {
   provider = "prisma-client-js"
 }
